@@ -45,52 +45,62 @@ def showPlot():
 # for each instance in sentiment list increment x by 1. If sentiment is positive increment y by 1, elif sentiment is
 # negative increment y by -1
 def animate(i):
-    plt.ion()
-    filePath = resource_path(os.path.dirname(os.path.abspath(__file__))) + "\\sentiment-output.txt"
-    sentiment_output = open(filePath, "r").read()
-    sentiment_list = sentiment_output.split('\n')
+    try:
+        plt.ion()
+        filePath = resource_path(os.path.dirname(os.path.abspath(__file__))) + "\\sentiment-output.txt"
+        sentiment_output = open(filePath, "r").read()
+        sentiment_list = sentiment_output.split('\n')
 
-    xValues = []
-    yValues = []
+        xValues = []
+        yValues = []
 
-    x = 0
-    y = 0
+        x = 0
+        y = 0
 
-    for sentiment in sentiment_list:
-        x += 1
-        if "pos" in sentiment:
-            y += 1
-        elif "neg" in sentiment:
-            y -= 1
+        for sentiment in sentiment_list:
+            x += 1
+            if "pos" in sentiment:
+                y += 1
+            elif "neg" in sentiment:
+                y -= 1
 
-        xValues.append(x)
-        yValues.append(y)
+            xValues.append(x)
+            yValues.append(y)
 
-    subplot.clear()
-    subplot.plot(xValues, yValues)
+        subplot.clear()
+        subplot.plot(xValues, yValues)
+    except Exception:
+        box.showinfo("File missing.", message="Check sentiment-output.txt is in dist folder.")
+        window.destroy()
 
 
 # stream method which is attached to tkinter run button, this method sets the global var connected as true which allows
 # the stream listener to work. It then opens the sentiment output file and clears it of any previous analysis. Finally
 # it calls the connect method from below.
 def stream(SearchTerm):
-    global connected
-    connected = True
-    filePath = resource_path(os.path.dirname(os.path.abspath(__file__))) + "\\sentiment-output.txt"
-    output = open(filePath, "r+")
-    output.truncate(0)
-    connect(SearchTerm)
+    try:
+        global connected
+        connected = True
+        filePath = resource_path(os.path.dirname(os.path.abspath(__file__))) + "\\sentiment-output.txt"
+        output = open(filePath, "r+")
+        output.truncate(0)
+        connect(SearchTerm)
+    except Exception:
+        box.showinfo("Connection error.", message="Check Internet connection.")
 
 
 # Connect method which is called in stream method. This establishes the connection to the twitter API and streams tweets
 # which contain the SearchTerm string that the user enters. We only get english tweets as the algorithms are only
 # trained on english language data.
 def connect(SearchTerm):
-    auth = OAuthHandler(ckey, csecret)
-    auth.set_access_token(atoken, asecret)
-    # The method Stream is not the same as my method above. With a capital S this is a class of the tweepy package
-    twitterStream = Stream(auth, Listener())
-    twitterStream.filter(track=[SearchTerm], languages=["en"])
+    try:
+        auth = OAuthHandler(ckey, csecret)
+        auth.set_access_token(atoken, asecret)
+        # The method Stream is not the same as my method above. With a capital S this is a class of the tweepy package
+        twitterStream = Stream(auth, Listener())
+        twitterStream.filter(track=[SearchTerm], languages=["en"])
+    except Exception:
+        box.showinfo("Connection error.", message="Check Internet connection.")
 
 
 # Stream listener class, this is what allows the application to update itself on data being received live from twitter
@@ -99,29 +109,33 @@ class Listener(StreamListener):
     # on data method, load the tweets from json into text and id vars. The tweet text is run through
     # sentimentMod.sentiment to get the classification and the confidence
     def on_data(self, data):
-        global tweetlist
-        all_tweets = json.loads(data)
-        tweet = all_tweets['text']
-        tweet_id = all_tweets['id']
-        classification, confidence = sentimentMod.sentiment(tweet)
-        # Write the output for each instance into the tweetList, this will be displayed in front end
-        tweetlist.insert('end', str(classification) + ' --|-- ' + str(confidence) + ' --|-- ' + str(tweet) + '\n')
-        tweetlist.insert('end', 'https://twitter.com/twitter/statuses/' + str(tweet_id) + '\n')
-        # Check that the confidence of our voted classifier is above the human agreement threshold
-        # If so we store the output of the classification in the sentiment output file
-        if confidence * 100 >= 65:
-            filePath = resource_path(os.path.dirname(os.path.abspath(__file__))) + "\\sentiment-output.txt"
-            output = open(filePath, "a")
-            output.write(classification)
-            output.write('\n')
-            output.close()
+        try:
+            global tweetlist
+            all_tweets = json.loads(data)
+            tweet = all_tweets['text']
+            tweet_id = all_tweets['id']
+            classification, confidence = sentimentMod.sentiment(tweet)
+            # Write the output for each instance into the tweetList, this will be displayed in front end
+            tweetlist.insert('end', str(classification) + ' --|-- ' + str(confidence) + ' --|-- ' + str(tweet) + '\n')
+            tweetlist.insert('end', 'https://twitter.com/twitter/statuses/' + str(tweet_id) + '\n')
+            # Check that the confidence of our voted classifier is above the human agreement threshold
+            # If so we store the output of the classification in the sentiment output file
+            if confidence * 100 >= 65:
+                filePath = resource_path(os.path.dirname(os.path.abspath(__file__))) + "\\sentiment-output.txt"
+                output = open(filePath, "a")
+                output.write(classification)
+                output.write('\n')
+                output.close()
 
-        # if connected return true else return false means that when we click stop in front end and connected is set to
-        # false the listener will stop, until the run button is pressed again allowing the connect var to return to true
-        if connected:
-            return True
-        else:
-            return False
+                # if connected return true else return false means that when we click stop in front end and connected
+                # is set to false the listener will stop, until the run button is pressed again allowing the connect
+                # var to return to true
+                if connected:
+                    return True
+                else:
+                    return False
+        except Exception:
+            box.showinfo("Connection error.", message="Check Internet connection.")
 
     # error handling method, which will display an error message in a tkinter box
     def on_error(self, status):
@@ -196,7 +210,10 @@ if __name__ == "__main__":
 
     # simple callback method which allows the user to access the url I have included in the login window
     def callback(url):
-        webbrowser.open_new(url)
+        try:
+            webbrowser.open_new(url)
+        except Exception:
+            box.showinfo("Connection error.", message="Check Internet connection.")
 
     # checkQuit method which asks the user if they want to exit the application without logging in
     def checkQuit():
@@ -206,11 +223,14 @@ if __name__ == "__main__":
 
     # Method which allows users to access the tweet hyperlink in the tweetList
     def tweetCallback(url):
-        url = tweetlist.get(ACTIVE)
-        if 'https://twitter.com/twitter/statuses/' in url:
-            webbrowser.open_new(url)
-        else:
-            pass
+        try:
+            url = tweetlist.get(ACTIVE)
+            if 'https://twitter.com/twitter/statuses/' in url:
+                webbrowser.open_new(url)
+            else:
+                pass
+        except Exception:
+            box.showinfo("Connection error.", message="Check Internet connection.")
 
     # Method which allows user to clear the tweetList for a new analysis
     def clearTweetList():
@@ -312,15 +332,18 @@ if __name__ == "__main__":
     helpfulTips2.place(anchor='s', relx=.5, rely=1)
 
     # Adding a scrollbar for large amounts of data
-    scrollbar = tkinter.Scrollbar(lower_frame)
-    scrollbar.pack(side='right', fill='y')
-    tweetlist = tkinter.Listbox(label, yscrollcommand=scrollbar.set)
+    vScrollbar = tkinter.Scrollbar(lower_frame)
+    vScrollbar.pack(side='right', fill='y')
+    hScrollbar = tkinter.Scrollbar(lower_frame, orient='horizontal')
+    hScrollbar.pack(side='bottom', fill='x')
+    tweetlist = tkinter.Listbox(label, yscrollcommand=vScrollbar.set, xscrollcommand=hScrollbar.set)
     # binding a callback function so that users can double click the tweet links and be brought to the tweet in their
     # browser
     tweetlist.bind("<Double-Button-1>", tweetCallback)
     tweetlist.bind('<Escape>', (lambda event: clearTweetList()))
     tweetlist.place(relwidth=1, relheight=1)
-    scrollbar.config(command=tweetlist.yview)
+    vScrollbar.config(command=tweetlist.yview)
+    hScrollbar.config(command=tweetlist.xview)
     # withdraw the main window so it is not seen before logging in
     window.withdraw()
     # set the window geometry and initialize it
