@@ -24,6 +24,14 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+# Make safe method, simply strips special characters from the string unless they are specifically needed for the
+# purposes of the application. This is used on all .get() methods and helps in preventing any kind
+# of code injection / hacking
+def makeSafe(text):
+    cleanedText = ''.join(char for char in text if char.isalnum() or char == '@' or char == '#' or char == '-')
+    return cleanedText
+
+
 # showPlot method. This method creates a matplotlib animation, based on the information below.
 # The first few lines are simply to do with the style of the plot
 # The funcanimation method implements animate from below to read the information for plotting live
@@ -34,7 +42,7 @@ def showPlot():
     style.use("ggplot")
     figure = plt.figure()
     subplot = figure.add_subplot(1, 1, 1)
-    figure.canvas.set_window_title(entry.get())
+    figure.canvas.set_window_title(makeSafe(entry.get()))
     plot = animation.FuncAnimation(figure, animate, interval=100)
     plt.show()
     # According to the console this line throws an error, however it also fixes a bug which occurs when it is not here
@@ -190,23 +198,16 @@ if __name__ == "__main__":
         global csecret
         global atoken
         global asecret
-        if len(consumerKeyEntry.get()) == len(ckey) and len(consumerSecretEntry.get()) == len(csecret) and \
-                len(authTokenEntry.get()) == len(atoken) and len(authSecretEntry.get()) == len(asecret):
-            ckey = consumerKeyEntry.get()
-            csecret = consumerSecretEntry.get()
-            atoken = authTokenEntry.get()
-            asecret = authSecretEntry.get()
+        if len(makeSafe(consumerKeyEntry.get())) == len(ckey) and len(makeSafe(consumerSecretEntry.get())) == len(csecret) and \
+                len(makeSafe(authTokenEntry.get())) == len(atoken) and len(makeSafe(authSecretEntry.get())) == len(asecret):
+            ckey = makeSafe(consumerKeyEntry.get())
+            csecret = makeSafe(consumerSecretEntry.get())
+            atoken = makeSafe(authTokenEntry.get())
+            asecret = makeSafe(authSecretEntry.get())
             window.deiconify()
             top.destroy()
         else:
             box.showinfo('Info', message='Invalid Login')
-
-    # Cancel method for a button on the login window. Since the login window is a top level window if you close it
-    # without logging in the main window will remain in the background. To avoid this the cancel button destroys both
-    # windows and exits
-    def cancel():
-        top.destroy()
-        window.destroy()
 
     # simple callback method which allows the user to access the url I have included in the login window
     def callback(url):
@@ -238,7 +239,7 @@ if __name__ == "__main__":
 
 
     # Styling the login window
-    top_background_label = tkinter.Label(top, bg='#20B2AA')
+    top_background_label = tkinter.Label(top, bg='#00EEFF')
     top_background_label.place(relwidth=1, relheight=1)
     consumerKeyEntry = tkinter.Entry(top)
     consumerSecretEntry = tkinter.Entry(top)
@@ -248,23 +249,23 @@ if __name__ == "__main__":
     introductionLabel = tkinter.Label(top, text='Welcome to the Twitter Sentiment Analysis App. \n In order to have a '
                                                 'fully working version for each user you must create a Twitter Api '
                                                 'developer account and enter the Api keys below. \n This will allow '
-                                                'you to pull the tweets for sentiment analysis.', bg='#20B2AA',
+                                                'you to pull the tweets for sentiment analysis.', bg='#00EEFF',
                                       font='Helvetica 14 bold')
     introductionLabel.place(anchor='center', relx=.5, rely=.05)
     # Hyperlink to twitter dev page for first time users
-    link1 = tkinter.Label(top, text="Visit Twitter Developer page here.", fg="blue", cursor="hand2")
+    link1 = tkinter.Label(top, text="Visit Twitter Developer page here.", fg="blue", cursor="hand2", bg="#FFFFFF")
     link1.place(anchor='center', relx=.5, rely=.12)
     link1.bind("<Button-1>", lambda e: callback("https://developer.twitter.com/en/apply-for-access"))
     # button 1 = login. When clicked this will call the login method
     topButton1 = tkinter.Button(top, text="Login", command=lambda: login(), bg='#90EE90', font='Helvetica 14 bold')
 
     # button 2 = cancel. When clicked this will call the cancel method
-    topButton2 = tkinter.Button(top, text="Cancel", command=lambda: cancel(), bg='#F08080', font='Helvetica 14 bold')
+    topButton2 = tkinter.Button(top, text="Cancel", command=lambda: checkQuit(), bg='#F08080', font='Helvetica 14 bold')
     # Further styling of the login window
-    consumerKeyLabel = tkinter.Label(top, text="Enter Consumer Key", bg='#20B2AA', font='Helvetica 14 bold')
-    consumerSecretLabel = tkinter.Label(top, text="Enter Consumer Secret", bg='#20B2AA', font='Helvetica 14 bold')
-    authTokenLabel = tkinter.Label(top, text="Enter Authentication Token", bg='#20B2AA', font='Helvetica 14 bold')
-    authSecretLabel = tkinter.Label(top, text="Enter Authentication Secret", bg='#20B2AA', font='Helvetica 14 bold')
+    consumerKeyLabel = tkinter.Label(top, text="Enter Consumer Key", bg='#00EEFF', font='Helvetica 14 bold')
+    consumerSecretLabel = tkinter.Label(top, text="Enter Consumer Secret", bg='#00EEFF', font='Helvetica 14 bold')
+    authTokenLabel = tkinter.Label(top, text="Enter Authentication Token", bg='#00EEFF', font='Helvetica 14 bold')
+    authSecretLabel = tkinter.Label(top, text="Enter Authentication Secret", bg='#00EEFF', font='Helvetica 14 bold')
     consumerKeyEntry.place(anchor='center', relx=.5, rely=.2, relheight=.1, relwidth=.3)
     consumerKeyLabel.place(anchor='w', relx=.01, rely=.2, relheight=.1, relwidth=.2)
     consumerSecretEntry.place(anchor='center', relx=.5, rely=.4, relheight=.1, relwidth=.3)
@@ -273,16 +274,16 @@ if __name__ == "__main__":
     authTokenLabel.place(anchor='w', relx=.01, rely=.6, relheight=.1, relwidth=.2)
     authSecretEntry.place(anchor='center', relx=.5, rely=.8, relheight=.1, relwidth=.3)
     top.bind('<Return>', (lambda event: login()))
-    top.bind('<Escape>', (lambda event: cancel()))
+    top.bind('<Escape>', (lambda event: checkQuit()))
     authSecretLabel.place(anchor='w', relx=.01, rely=.8, relheight=.1, relwidth=.2)
     topButton1.place(relx=.8, rely=.4, relheight=.2, relwidth=.2)
     topButton2.place(relx=.8, rely=.6, relheight=.2, relwidth=.2)
     topTipLabel = tkinter.Label(top, text="Enter key can be used to log in. \n"
                                           "Escape key can be used to exit.",
-                                bg='#20B2AA', font='Helvetica 14 bold')
+                                bg='#00EEFF', font='Helvetica 14 bold')
     topTipLabel.place(anchor='se', relx=1, rely=1)
     # styling the main window
-    main_background_label = tkinter.Label(window, bg='#20B2AA')
+    main_background_label = tkinter.Label(window, bg='#00EEFF')
     main_background_label.place(relwidth=1, relheight=1)
 
     frame = tkinter.Frame(window, bg='#80c1ff', bd=5)
@@ -292,9 +293,9 @@ if __name__ == "__main__":
     entry.place(relwidth=.5, relheight=1)
 
     # run button which will take entry from above and pass to a call on the clicked method
-    button1 = tkinter.Button(frame, text='Run', font=40, command=lambda: clicked(entry.get()))
+    button1 = tkinter.Button(frame, text='Run', font=40, command=lambda: clicked(makeSafe(entry.get())))
     button1.place(relx=.55, relheight=1, relwidth=.25)
-    entry.bind('<Return>', (lambda event: clicked(entry.get())))
+    entry.bind('<Return>', (lambda event: clicked(makeSafe(entry.get()))))
     tip1 = Balloon(window)
     tip1.bind_widget(button1, balloonmsg="The run button will search for live tweets based on the search term. The "
                                          "output can be viewed below or in the animated graph that will pop up.")
@@ -317,7 +318,7 @@ if __name__ == "__main__":
                                                         "search term to start streaming tweets, \n once you start "
                                                         "receiving tweets they will be displayed with the sentiment "
                                                         "and a link to the tweet in the list below. \n A graph will "
-                                                        "also open plotting the sentiment.", font='Helvetica 14 bold', bg='#20B2AA')
+                                                        "also open plotting the sentiment.", font='Helvetica 14 bold', bg='#00EEFF')
     applicationInformation.place(anchor='n', relx=.5, rely=0)
 
     helpfulTips2 = tkinter.Label(window, text="Tips for new Users: \n"
@@ -328,7 +329,7 @@ if __name__ == "__main__":
                                               "and launching a new one.-- \n"
                                               "--The links below each tweet can be double clicked to open the tweet in "
                                               "a browser-- "
-                                 , bg='#20B2AA', font='Helvetica 12 bold')
+                                 , bg='#00EEFF', font='Helvetica 12 bold')
     helpfulTips2.place(anchor='s', relx=.5, rely=1)
 
     # Adding a scrollbar for large amounts of data
