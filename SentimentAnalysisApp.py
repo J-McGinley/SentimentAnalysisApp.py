@@ -28,7 +28,8 @@ def resource_path(relative_path):
 # purposes of the application. This is used on all .get() methods and helps in preventing any kind
 # of code injection / hacking
 def makeSafe(text):
-    cleanedText = ''.join(char for char in text if char.isalnum() or char == '@' or char == '#' or char == '-')
+    cleanedText = ''.join(char for char in text if char.isalnum() or char == '@' or char == '#' or char == '-' or
+                          char == ' ')
     return cleanedText
 
 
