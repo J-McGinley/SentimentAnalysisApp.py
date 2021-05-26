@@ -29,7 +29,7 @@ def resource_path(relative_path):
 # of code injection / hacking
 def makeSafe(text):
     cleanedText = ''.join(char for char in text if char.isalnum() or char == '@' or char == '#' or char == '-' or
-                          char == ' ')
+                          char == ' ' or char == '$')
     return cleanedText
 
 
